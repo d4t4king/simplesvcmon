@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+
+import pprint
+import logging
+import logging.handlers
+import os, sys
+from termcolor import cprint,colored
+import datetime
+import argparse
+import subprocess
+import pwd
+
+### start logging
+class SyslogBOMFormatter(logging.Formatter):
+	def format(self, record):
+		result = super().format(record)
+		return "ufeff" + result
+
+def which(pgm):
+    path = os.getenv('PATH')
+    for p in path.split(os.path.pathsep):
+        p = os.path.join(p, pgm)
+        if os.path.exists(p) and os.access(p, os.X_OK):
+            return p
+
+def main():
+	handler = logging.handlers.SysLogHandler('/dev/log')
+	formatter = SyslogBOMFormatter(logging.BASIC_FORMAT)
+	handler.setFormatter(formatter)
+	root = logging.getLogger()
+	root.setLevel(os.environ.get("LOGLEVEL", "INFO"))
+	root.addHandler(handler)
+
+	parser = argparse.ArgumentParser("Scan a net and service.")
+	parser.add_argument('net', type=str, help="Net to acan.")
+	parser.add_argument('service', type=str, help="Service to scan.")
+	parser.add_argument('--max-rate', type=int, default=10000, \
+		dest='max_rate', help='masscan max-rate')
+	args = parser.parse_args()
+
+	assert isinstance(args.service, str), "Service should be a string: ftp, \
+http, https, mssql, mysql, oracle, postgre, pclpjl, rdp, rsh, smtp, ssh, \
+telnet, vnc, vpn"
+
+	working_dir = '/root/tools/simplesvcmon'
+
+	svc_ports = {}
+	svc_ports['ftp'] = "-p21 "
+	svc_ports['http'] = "-p80,8000,8080 "
+	svc_ports['https'] = "-p443,8443 "
+	svc_ports['mssql'] = "-p1433 "
+	svc_ports['mysql'] = "-p3306 "
+	svc_ports['oracle'] = "-p1521 "
+	svc_ports['postgre'] = "-p5432"
+	svc_ports['pclpjl'] = "-p9100 "
+	svc_ports['postgres'] = "-p5432 "
+	svc_ports['rdp'] = "-p3389 "
+	svc_ports['rsh'] = "-p514 "
+	svc_ports['smtp'] = "-p25,965 "
+	svc_ports['ssh'] = "-p22 "
+	svc_ports['telnet'] = "-p23 "
+	svc_ports['vnc'] = "-p5800,5900-5910 "
+	svc_ports['vpn'] = "-p1701,1723 "
+
+
+### set a pid file
+	with open('/tmp/scan.pid.run', 'w') as pidf:
+		pidf.write(str(os.getpid()))
+
+### Get net and port/service to scan (args?)
+### check for and set up constants for masscan, nmap, exclusion files
+	masscan = which('masscan')
+	exclusions = "{}/{}_exclusions.txt".format(working_dir, args.net)
+	if not os.path.exists(exclusions):
+		exclusions = None
+
+	today = datetime.datetime.now()
+	scan_cmd = None
+	scan_cmd = "{} {}".format(masscan, svc_ports[args.service])
+	if not os.path.exists(os.path.join(working_dir, args.service)):
+		os.makedirs(os.path.join(working_dir, args.service))
+	xmlname = "{0}/{1}/{2}_{1}_{3}.xml"\
+		.format(working_dir, args.service, args.net.replace('/', '_'), today.strftime("%s"))
+	target = None
+	if exclusions is not None:
+		scan_cmd += "-oX {xml} --excludefile {ef} --reason --max-rate {mr} {net}"\
+			.format(xml=xmlname, ef=exclusions, mr=args.max_rate, net=args.net)
+	else:
+		scan_cmd += "-oX {xml} --reason --max-rate {mr} {net}"\
+			.format(xml=xmlname, mr=args.max_rate, net=args.net)
+
+### execute scan
+	print("Starting scan of protocol {} on network {}."\
+		.format(args.service, args.net))
+	print("CMD: |{}|".format(scan_cmd))
+	subprocess.call(scan_cmd.split(' '))
+	print("Scan of protocol {} on network {} is complete."\
+		.format(args.service, args.net))
+
+	#pwo = pwd.getpwnam('charlie')
+	#print("{}:{}".format(pwo[2], pwo[3]))
+	#os.chown(xmlname, pwo[2], pwo[3])
+
+### clean up and log
+	end_time = datetime.datetime.now()
+	#print("Script complete.")
+
+if __name__=='__main__':
+	main()
+#try:
+#	exit(main())
+#except Exception as err:
+#	logging.exception("Exception in main()")
+#	exit(1)
