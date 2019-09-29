@@ -102,3 +102,24 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# custom project omissions
+# db files
+*.db
+# data directories
+ftp/
+http/
+https/
+mssql/
+mysql/
+oracle/
+postgre/
+pclpjl/
+rdp/
+rsh/
+smtp/
+ssh/
+telnet/
+vnc/
+vpn/
+

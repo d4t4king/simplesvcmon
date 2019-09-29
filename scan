@@ -10,6 +10,8 @@ import argparse
 import subprocess
 import pwd
 
+from utils.mailer import mailer
+
 ### start logging
 class SyslogBOMFormatter(logging.Formatter):
 	def format(self, record):
@@ -89,7 +91,12 @@ telnet, vnc, vpn"
 		scan_cmd += "-oX {xml} --reason --max-rate {mr} {net}"\
 			.format(xml=xmlname, mr=args.max_rate, net=args.net)
 
-### execute scan
+	mail = mailer.mailer()
+	mail.send_scan_notice('ch@rlie.info', 'ch@rlie.info', '192.168.1.0/24', \
+		'192.168.1.132', 'masscan', \
+		today.strftime("%m-%d-%Y %H:%M:%S"))
+
+	### execute scan
 	print("Starting scan of protocol {} on network {}."\
 		.format(args.service, args.net))
 	print("CMD: |{}|".format(scan_cmd))
