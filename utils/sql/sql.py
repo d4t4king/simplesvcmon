@@ -64,6 +64,7 @@ class sqlutils():
             else:
                 self.port = DEFAULT_PORTS[self.dbtype]
 
+
     def dbsetup(self):
         if 'sqlite3' in self.dbtype:
             import sqlite3
@@ -133,6 +134,9 @@ class sqlutils():
             for row in c.execute("SELECT * FROM config;"):
                 config[row[0]] = row[1]
             conn.close()
+        else:
+            raise Exception("Don't know how to handle dbtype: {}".format( \
+                self.dbtype))
         return config
 
 

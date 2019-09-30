@@ -16,7 +16,7 @@ from utils.mailer import mailer
 class SyslogBOMFormatter(logging.Formatter):
 	def format(self, record):
 		result = super().format(record)
-		return "ufeff" + result
+		return "simpleSvcMon" + result
 
 def which(pgm):
     path = os.getenv('PATH')
@@ -44,7 +44,7 @@ def main():
 http, https, mssql, mysql, oracle, postgre, pclpjl, rdp, rsh, smtp, ssh, \
 telnet, vnc, vpn"
 
-	working_dir = '/root/tools/simplesvcmon'
+	working_dir = '.'
 
 	svc_ports = {}
 	svc_ports['ftp'] = "-p21 "

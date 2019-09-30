@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import argparse
+from termcolor import cprint, colored
+
+from utils.sql import sql
+
+def main():
+    parser = argparse.ArgumentParser("set some addtional config options")
+    parser.add_argument('-M', '--masscan-path', dest='masscan_path', \
+        help='path to the local masscan binary')
+    parser.add_argument('-N', '--nmap-path', dest='nmap_path', \
+        help='path to the local nmap binary')
+    parser.add_argument('--dbtype', dest='dbtype', \
+        help='database platform to use for data storage')
+    parser.add_argument('--dbfile', dest='dbfile', \
+        help='database file to use with sqlite3 dbtype')
+    parser.add_argument('-w', '--working-dir', dest='working_dir', \
+        help='directory to store all of the scan data files')
+    args = parser.parse_args()
+
+    CONFIGITEMS = ['masscan_path', 'nmap_path', 'xml_achive_period', \
+        'archive_expiry', 'dbtype', 'dbfile', 'dbhost', 'dbname', \
+        'dbuser', 'dbport', 'services']
+
+    db = sql.sqlutils(dbtype='sqlite3', dbfile='scandata.db')
+    config = db.load_config()
+
+    if args.masscan_path is not None:
+        config['masscan_path'] = args.masscan_path
+    if args.nmap_path is not None:
+        config['nmap_path'] = args.nmap_path
+    if args.working_dir is not None:
+        config['working_dir'] = args.working_dir
+
+    for k in config.keys():
+        print("{} => {}".format( colored(k, "yellow"), \
+            colored(config[k], "yellow", attrs=['bold'])))
+
+    print('Writing updated config to database.')
+    db.write_config(config)
+
+    
+if __name__=='__main__':
+    main()
