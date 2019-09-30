@@ -9,14 +9,16 @@ from utils.sql import sql
 
 def main():
     parser = argparse.ArgumentParser("set some addtional config options")
+    parser.add_argument('--dbtype', dest='dbtype', required=True, \
+        help='database platform to use for data storage')
+    parser.add_argument('--dbfile', dest='dbfile', required=True, \
+        help='database file to use with sqlite3 dbtype')
+    parser.add_argument('--smtp-host', dest='smtp_host', \
+        help='smtp hostname')
     parser.add_argument('-M', '--masscan-path', dest='masscan_path', \
         help='path to the local masscan binary')
     parser.add_argument('-N', '--nmap-path', dest='nmap_path', \
         help='path to the local nmap binary')
-    parser.add_argument('--dbtype', dest='dbtype', \
-        help='database platform to use for data storage')
-    parser.add_argument('--dbfile', dest='dbfile', \
-        help='database file to use with sqlite3 dbtype')
     parser.add_argument('-w', '--working-dir', dest='working_dir', \
         help='directory to store all of the scan data files')
     args = parser.parse_args()
@@ -25,7 +27,13 @@ def main():
         'archive_expiry', 'dbtype', 'dbfile', 'dbhost', 'dbname', \
         'dbuser', 'dbport', 'services']
 
-    db = sql.sqlutils(dbtype='sqlite3', dbfile='scandata.db')
+    db = None
+    if 'sqlite3' in args.dbtype:
+        db = sql.sqlutils(dbtype=args.dbtype, dbfile=args.dbfile)
+    else:
+        raise Exception("Don't know how to handle dbtype {} yet."\
+            .format(args.dbtype))
+
     config = db.load_config()
 
     if args.masscan_path is not None:

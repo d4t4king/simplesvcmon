@@ -1,4 +1,5 @@
 import sys
+from termcolor import cprint, colored
 
 
 class sqlutils():
@@ -131,8 +132,18 @@ class sqlutils():
             import sqlite3
             conn = sqlite3.connect(self.dbfile)
             c = conn.cursor()
-            for row in c.execute("SELECT * FROM config;"):
-                config[row[0]] = row[1]
+            try:
+                for row in c.execute("SELECT * FROM config;"):
+                    config[row[0]] = row[1]
+            except sqlite3.OperationalError as err:
+                if 'no such table:' in str(err):
+                    cprint("Database or table not initialized.i  Running dbsetup().", \
+                        "yellow")
+                    cprint("If no further errors received, try again.", \
+                        "yellow")
+                    self.dbsetup()
+                else:
+                    raise err
             conn.close()
         else:
             raise Exception("Don't know how to handle dbtype: {}".format( \
