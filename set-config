@@ -11,7 +11,8 @@ def main():
     parser = argparse.ArgumentParser("set some addtional config options")
     parser.add_argument('--dbtype', dest='dbtype', required=True, \
         help='database platform to use for data storage')
-    parser.add_argument('--dbfile', dest='dbfile', required=True, \
+    parser.add_argument('--dbfile', required='sqlite3' in sys.argv, \
+        dest='dbfile', \
         help='database file to use with sqlite3 dbtype')
     parser.add_argument('--smtp-host', dest='smtp_host', \
         help='smtp hostname')
@@ -50,6 +51,6 @@ def main():
     print('Writing updated config to database.')
     db.write_config(config)
 
-    
+
 if __name__=='__main__':
     main()
