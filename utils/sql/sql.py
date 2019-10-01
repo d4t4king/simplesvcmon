@@ -65,6 +65,19 @@ class sqlutils():
                 self.port = DEFAULT_PORTS[self.dbtype]
 
 
+    def __execute_sql_void(self, sql):
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            conn = sqlite3.connect(self.dbfile)
+            c = conn.cursor()
+            c.execute(sql)
+            conn.commit()
+            conn.close()
+        else:
+            raise Exception("Don't know how to handle database type {}"\
+                .format(self.dbtype))
+
+
     def dbsetup(self):
         if 'sqlite3' in self.dbtype:
             import sqlite3
@@ -112,13 +125,9 @@ class sqlutils():
                             "header_last_updated INTEGER, ",
                             "html_title TEXT, title_first_found INTEGER, ",
                             "title_last_updated INTEGER);")
-            conn = sqlite3.connect(self.dbfile)
-            c = conn.cursor()
             for k,v in tables.items():
                 #print("{}".format("".join(v)))
-                c.execute("".join(v))
-            conn.commit()
-            conn.close()
+                self.__execute_sql_void("".join(v))
         else:
             print("Don't know how to handle database type ({}) yet.".format( \
                 self.dbtype))
@@ -131,22 +140,34 @@ class sqlutils():
             import sqlite3
             conn = sqlite3.connect(self.dbfile)
             c = conn.cursor()
-            for row in c.execute("SELECT * FROM config;"):
-                config[row[0]] = row[1]
+            try:
+                for row in c.execute("SELECT * FROM config;"):
+                    config[row[0]] = row[1]
+            except sqlite3.OperationalError as err:
+                if 'no such table: config' in str(err):
+                    print("First run.  Database not initialized.")
+                    print("Preparing database for first run.")
+                    print("If not further errors are encountered, run again.")
+                    self.dbsetup()
             conn.close()
         else:
             raise Exception("Don't know how to handle dbtype: {}".format( \
                 self.dbtype))
         return config
 
+
     def write_config(self, config):
         dbconf = self.load_config()
         sql = None
         for k, v in config.items():
             if k in dbconf:
-                pass
-
-
+                sql = "UPDATE config SET value='{v}' WHERE name='{k}';"\
+                    .format(v=v, k=k)
+            else:
+                sql = "INSERT INTO config (name, value) VALUES ('{k}','{v}');"\
+                    .format(k=k, v=v)
+            print(sql)
+            self.__execute_sql_void(sql)
 
 
     def _get_record_id(self, table, field, value, **kwargs):
@@ -302,17 +323,13 @@ class sqlutils():
             "The fields parameter should be a dict of field/value pairs to insert."
         if 'sqlite3' in self.dbtype:
             import sqlite3
-            conn = sqlite3.connect(self.dbfile)
-            c = conn.cursor()
             sql = "INSERT INTO {tn} ( ".format(tn=table)
             sql += ",".join(fields.keys())
             sql += " ) VALUES ( '"
             sql += "','".join([str(x) for x in fields.values()])
             sql += "' );"
             print(sql)
-            c.execute(sql)
-            conn.commit()
-            conn.close()
+            self.__execute_sql_void(sql)
         else:
             raise Exception("Don't know how to handle db type: {}".format( \
                 self.dbtype))

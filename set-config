@@ -9,24 +9,40 @@ from utils.sql import sql
 
 def main():
     parser = argparse.ArgumentParser("set some addtional config options")
+    parser.add_argument('-M', '--masscan-path', dest='masscan_path', \
+        help='path to the local masscan binary')
+    parser.add_argument('-N', '--nmap-path', dest='nmap_path', \
+        help='path to the local nmap binary')
+    parser.add_argument('--xml_archive', dest='xml_archive_period', \
+        type=int, default=86400, \
+        help='how long to wait before archiving (compressing) the xml.')
+    parser.add_argument('--archive_expiry', dest='archive_expiry', \
+        type=int, default=2592000, \
+        help='how long to wait before deleting archives')
     parser.add_argument('--dbtype', dest='dbtype', required=True, \
         help='database platform to use for data storage')
     parser.add_argument('--dbfile', required='sqlite3' in sys.argv, \
         dest='dbfile', \
         help='database file to use with sqlite3 dbtype')
-    parser.add_argument('--smtp-host', dest='smtp_host', \
-        help='smtp hostname')
-    parser.add_argument('-M', '--masscan-path', dest='masscan_path', \
-        help='path to the local masscan binary')
-    parser.add_argument('-N', '--nmap-path', dest='nmap_path', \
-        help='path to the local nmap binary')
+    parser.add_argument('-H', '--dbhost', dest='dbhost', \
+        help='system hosting the db (if note sqlite3)')
+    parser.add_argument('-n', '--dbname', dest='dbname', \
+        help='name of the database')
+    parser.add_argument('-u', '--dbuser', dest='dbuser', \
+        help='username to login to the database')
+    parser.add_argument('-p', '--dbport', dest='dbport', \
+        help='port to connect to for the database service')
+    parser.add_argument('-s', '--services', dest='services', \
+        help='services to scan and monitor')
     parser.add_argument('-w', '--working-dir', dest='working_dir', \
         help='directory to store all of the scan data files')
+    parser.add_argument('-S', '--smtp-host', dest='smtp_host', \
+        help='smtp hostname')
     args = parser.parse_args()
 
     CONFIGITEMS = ['masscan_path', 'nmap_path', 'xml_achive_period', \
         'archive_expiry', 'dbtype', 'dbfile', 'dbhost', 'dbname', \
-        'dbuser', 'dbport', 'services']
+        'dbuser', 'dbport', 'services', 'working_dir', 'smtp_host']
 
     db = None
     if 'sqlite3' in args.dbtype:
@@ -41,14 +57,35 @@ def main():
         config['masscan_path'] = args.masscan_path
     if args.nmap_path is not None:
         config['nmap_path'] = args.nmap_path
+    if args.xml_archive_period is not None:
+        config['xml_archive_period'] = args.xml_archive_period
+    if args.archive_expiry is not None:
+        config['archive_expiry'] = args.archive_expiry
+    if args.dbtype is not None:
+        config['dbtype'] = args.dbtype
+    if args.dbfile is not None:
+        config['dbfile'] = args.dbfile
+    if args.dbhost is not None:
+        config['dbhost'] = args.dbhost
+    if args.dbname is not None:
+        config['dbname'] = args.dbname
+    if args.dbuser is not None:
+        config['dnuser'] = args.dbuser
+    if args.dbport is not None:
+        config['dbport'] = args.dbport
+    if args.services is not None:
+        config['services'] = args.services
     if args.working_dir is not None:
         config['working_dir'] = args.working_dir
+    if args.smtp_host is not None:
+        config['smtp_host'] = args.smtp_host
 
     for k in config.keys():
         print("{} => {}".format( colored(k, "yellow"), \
             colored(config[k], "yellow", attrs=['bold'])))
 
     print('Writing updated config to database.')
+    print(config)
     db.write_config(config)
 
 
