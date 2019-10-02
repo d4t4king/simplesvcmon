@@ -66,22 +66,22 @@ def main():
     with open(pidfile, 'w') as pidf:
         pidf.write(str(os.getpid()))
 
+	
     # initialize some important variables
     today = datetime.datetime.now()
     dd = int(today.strftime('%s')) - 86400
     last_24 = datetime.datetime.fromtimestamp(dd)
-    working_dir = '/root/tools/simplesvcmon'
-    dbfile = '{}/scandata.db'.format(working_dir)
+    # set up/connect to the DB
+    db = sql.sqlutils()
+    conf = db.load_config()
     files_to_process = []
 
     ### findall *.xml files in protocol directories
-    for root, dirs, files in os.walk(working_dir):
+    for root, dirs, files in os.walk(conf['working_dir']):
         for file in files:
             if file.endswith('.xml'):
                 files_to_process.append(os.path.join(root, file))
 
-    # set up/connect to the DB
-    db = sql.sqlutils(dbtype='sqlite3', dbfile=dbfile)
     # print(str(dir(db)))
     db.dbsetup()
 #     print("""dbtype: {0}

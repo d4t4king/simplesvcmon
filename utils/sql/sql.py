@@ -40,7 +40,7 @@ class sqlutils():
         if 'sqlite3' in self.dbtype:
             if 'dbfile' in kwargs.keys() and kwargs['dbfile'] is not None:
                 assert isinstance(kwargs['dbfile'], str), \
-                    "'dbfile' must be s tring.  Got {}".format(\
+                    "'dbfile' must be string.  Got {}".format(\
                         type(kwargs['dbfile']))
                 self.dbfile = kwargs['dbfile']
             elif 'dbfile' not in kwargs.keys() and self.dbfile is not None:

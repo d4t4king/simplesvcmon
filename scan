@@ -11,6 +11,7 @@ import subprocess
 import pwd
 
 from utils.mailer import mailer
+from utils.sql import sql
 
 ### start logging
 class SyslogBOMFormatter(logging.Formatter):
@@ -69,9 +70,12 @@ telnet, vnc, vpn"
 	with open('/tmp/scan.pid.run', 'w') as pidf:
 		pidf.write(str(os.getpid()))
 
+	sqlu = sql.sqlutils()
+	conf = sqlu.load_config()
+
 ### Get net and port/service to scan (args?)
 ### check for and set up constants for masscan, nmap, exclusion files
-	masscan = which('masscan')
+	masscan = which('masscan') if which('masscan') is not None else conf['masscan_path']
 	exclusions = "{}/{}_exclusions.txt".format(working_dir, args.net)
 	if not os.path.exists(exclusions):
 		exclusions = None
@@ -91,7 +95,8 @@ telnet, vnc, vpn"
 		scan_cmd += "-oX {xml} --reason --max-rate {mr} {net}"\
 			.format(xml=xmlname, mr=args.max_rate, net=args.net)
 
-	mail = mailer.mailer()
+	print("MailHost is {}".format(conf['smtp_host']))
+	mail = mailer.mailer(smtp_host=conf['smtp_host'])
 	mail.send_scan_notice('ch@rlie.info', 'ch@rlie.info', '192.168.1.0/24', \
 		'192.168.1.132', 'masscan', \
 		today.strftime("%m-%d-%Y %H:%M:%S"))
