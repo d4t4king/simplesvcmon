@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+from termcolor import cprint, colored
+import argparse
+
+from utils.sql import sql
+
+def main():
+    parser = argparse.ArgumentParser('get stats from db')
+    parser.add_argument('action', help="Which stats you want?")
+    args = parser.parse_args()
+
+    # all these stats are in the db (somewhere), so set up the semi-"global"
+    # db object to the utils class
+    db = sql.sqlutils(dbtype='sqlite3', dbfile='scandata.db')
+
+    if 'records' in args.action:
+        # print out stats about the records:
+        #   how many total?
+        #   how many dupes (if any)
+        field = 'id'
+        for tbl in db.TABLES:
+            if 'config' in tbl:
+                print("Table: {tn}, Count: {cnt}"\
+                    .format(tn=tbl, cnt=db._get_record_count(tbl)))
+            else:
+                print("Table: {tn}, Count: {cnt}"\
+                    .format(tn=tbl, cnt=db._get_record_count(tbl, field, True)))
+    elif 'times' in args.action:
+        # print stats about times
+        #   mainly scan times
+        #   most relevant for vuln and gather
+        #   that will actually take some time
+        pass
+    else:
+        raise Exception("Don't know how to process action: {}"\
+            .format(args.action))
+
+if __name__=='__main__':
+    main()
