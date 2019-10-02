@@ -98,8 +98,8 @@ def main():
     ### Loop through the files
     for f in files_to_process:
         ###		read in the xml
-        print(str(filecount))
-        print("f={}".format(f))
+        #print(str(filecount))
+        #print("f={}".format(f))
         with open(f, 'r') as xml:
             obj = untangle.parse(xml)
             cprint(obj, "yellow")
@@ -113,20 +113,20 @@ def main():
                     fields = {}
                     if re.search(r'(?:\d{1,3}\.){3}\d{1,3}', \
                             host.address['addr']) is not None:
-                        print("Host looks like an IP address: {}"\
-                            .format(host.address['addr']))
+                        #print("Host looks like an IP address: {}"\
+                        #    .format(host.address['addr']))
                         fields['ipv4addr'] = \
                             host.address['addr'] \
                                 if host.address['addrtype'] == 'ipv4' else None
                         fields['hostname'] = None
                         try:
                             fields['hostname'] = \
-                                str(socket.gethostbyaddr(host.address['addr']))[0]
+                                str(socket.gethostbyaddr(host.address['addr'])[0])
                         except socket.herror as err:
                             fields['hostname'] = 'unresolved'
                     else:
-                        print("Host looks like an FQDN: {}"\
-                            .format(host.address['addr']))
+                        #print("Host looks like an FQDN: {}"\
+                        #    .format(host.address['addr']))
                         fields['hostname'] = host.address['addr']
                         fields['ipv4address'] = None
                         try:
@@ -134,7 +134,7 @@ def main():
                                 .gethostbyname(host.address['addr'])
                         except socket.gaierror as err:
                             fields['ipv4address'] - 'unresolved'
-                    print("fields: {}".format(fields))
+                    #print("fields: {}".format(fields))
                     db.add_host(fields)
                 if db.port_exists(host.ports.port['portid']):
                     port_id = db.get_port_id(host.ports.port['portid'])
@@ -149,8 +149,10 @@ def main():
                     print("Found record exists: {}:{} ({})" \
                           .format(host.address['addr'], host.ports.port['portid'], \
                                   rcd_id))
-                    fields = ('last_found', today.strftime("%s"))
-                    conds = ('port_id', db.get_port_id(host.ports.port['portid']), \
+                    #print("Today is {}. EndTime is {}.".format( \
+                    #    today.strftime('%s'), host['endtime']))
+                    fields = ('last_found', int(host['endtime']))
+                    conds = ('service_id', db.get_port_id(host.ports.port['portid']), \
                         'host_id', db.get_host_id(host.address['addr']))
                     db.update_found(fields, conds)
                 else:

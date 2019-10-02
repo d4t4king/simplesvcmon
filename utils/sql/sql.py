@@ -7,14 +7,17 @@ class sqlutils():
         sys.bytecodebase = None
         sys.dont_write_bytecode = True
         import re
-        DBTYPES_RGX = re.compile(r'(?:sqlite3|mysql|mssql|oracle|postgre)', \
+        self.DBTYPES_RGX = re.compile(r'(?:sqlite3|mysql|mssql|oracle|postgre)', \
             re.IGNORECASE)
 
-        DEFAULT_PORTS = {}
-        DEFAULT_PORTS['mssql'] = 1433
-        DEFAULT_PORTS['mysql'] = 3306
-        DEFAULT_PORTS['oracle'] = 1521
-        DEFAULT_PORTS['postgre'] = 5432
+        self.DEFAULT_PORTS = {}
+        self.DEFAULT_PORTS['mssql'] = 1433
+        self.DEFAULT_PORTS['mysql'] = 3306
+        self.DEFAULT_PORTS['oracle'] = 1521
+        self.DEFAULT_PORTS['postgre'] = 5432
+
+        self.TABLES = ['config', 'hosts', 'services', 'ports', 'found', \
+            'vulns', 'vulns_found', 'times', 'http_meta']
 
         self.dbtype = None
         self.dbfile = None
@@ -31,7 +34,7 @@ class sqlutils():
             self.dbtype = 'sqlite3'
             self.dbfile = 'scandata.db'
 
-        if DBTYPES_RGX.search(self.dbtype) is None:
+        if self.DBTYPES_RGX.search(self.dbtype) is None:
             raise ValueError("Unexpected database type: {}".format(self.dbtype))
 
         if 'sqlite3' in self.dbtype:
@@ -75,6 +78,22 @@ class sqlutils():
             conn.close()
         else:
             raise Exception("Don't know how to handle database type {}"\
+                .format(self.dbtype))
+
+
+    def __execute_sql_int(self, sql):
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            conn = sqlite3.connect(self.dbfile)
+            c = conn.cursor()
+            c.execute(sql)
+            res = c.fetchone()
+            if res:
+                return int(res[0])
+            else:
+                return 0
+        else:
+            raise Exception("Don't know how to handle database type{}"\
                 .format(self.dbtype))
 
 
@@ -170,6 +189,20 @@ class sqlutils():
             self.__execute_sql_void(sql)
 
 
+    def _get_record_count(self, table, field=None, distinct=False):
+        sql = None
+        if distinct and field is not None:
+            sql = "SELECT COUNT(DISTINCT {f}) FROM {tn}"\
+                .format(f=field, tn=table)
+        elif not distinct and field is not None:
+            sql = "SELECT COUNT({f}) FROM {tn}"\
+                .format(f=field, tn=table)
+        else:
+            sql = "SELECT COUNT(*) FROM {tn}"\
+                .format(tn=table)
+        return self.__execute_sql_int(sql)
+
+
     def _get_record_id(self, table, field, value, **kwargs):
         if 'sqlite3' in self.dbtype:
             import sqlite3
@@ -179,7 +212,7 @@ class sqlutils():
 
 
     def _record_exists(self, table, field, value):
-        print("|{}|".format(value))
+        #print("|{}|".format(value))
         if 'sqlite3' in self.dbtype:
             import sqlite3
             conn = sqlite3.connect(self.dbfile)
@@ -198,7 +231,7 @@ class sqlutils():
                     raise err
             result = c.fetchone()
             if result:
-                print(result)
+                #print(result)
                 return result[0]
             else:
                 return False
@@ -221,7 +254,7 @@ class sqlutils():
 
     def _record_exists_2f(self, table, field, value, field2, value2):
         sys.dont_write_bytecode = True
-        print("|{}-{}|".format(value, value2))
+        #print("|{}-{}|".format(value, value2))
         if 'sqlite3' in self.dbtype:
             import sqlite3
             conn = sqlite3.connect(self.dbfile)
@@ -240,7 +273,7 @@ class sqlutils():
                     raise err
             result = c.fetchone()
             if result:
-                print(result)
+                #print(result)
                 return result[0]
             else:
                 return False
@@ -265,7 +298,7 @@ class sqlutils():
             c.execute("SELECT id FROM ports WHERE port_num=?", \
                 (port,))
             res = c.fetchone()
-            print("|{}|".format(res))
+            #print("|{}|".format(res))
             conn.close()
         else:
             raise Exception("Don't know how to handle db type: {}".format( \
@@ -285,7 +318,7 @@ class sqlutils():
             c.execute("SELECT id FROM hosts WHERE ipv4addr=? OR hostname=?", \
                 (host,host))
             res = c.fetchone()
-            print("|{}|".format(res))
+            #print("|{}|".format(res))
             conn.close()
         else:
             raise Exception("Don't know how to handle db type: {}".format( \
@@ -307,7 +340,7 @@ class sqlutils():
             sql = "SELECT id FROM found WHERE host_Id=? AND service_id=?"
             c.execute(sql, (host_id, port_id))
             res = c.fetchone()
-            print("|{}|".format(res))
+            #print("|{}|".format(res))
             conn.close()
         else:
             raise Exception("Don't know how to handle db type {}".format( \
@@ -358,9 +391,6 @@ class sqlutils():
                 errstr = "Unbalanced key/value pairs in conds:\n"
                 errstr += str(conds)
                 raise Exception(errstr)
-            import sqlite3
-            conn = sqlite3.connect(self.dbfile)
-            c = conn.cursor()
             sql = "UPDATE {tn} SET {f}={fv} ".format( \
                 tn=table, f=fields[0], fv=fields[1])
             if num_conds == 2:
@@ -374,6 +404,7 @@ class sqlutils():
                 print(sql)
             else:
                 raise Exception("Don't know how to handle more then 2 conditions yet.")
+            self.__execute_sql_void(sql)
         else:
             raise Exception("Don't know how to handle db type: {}".format( \
                 self.dbtype))
