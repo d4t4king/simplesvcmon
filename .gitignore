@@ -113,7 +113,7 @@ https/
 mssql/
 mysql/
 oracle/
-postgre/
+postgres*/
 pclpjl/
 rdp/
 rsh/
@@ -122,4 +122,3 @@ ssh/
 telnet/
 vnc/
 vpn/
-
