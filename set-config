@@ -19,10 +19,10 @@ def main():
     parser.add_argument('--archive_expiry', dest='archive_expiry', \
         type=int, default=2592000, \
         help='how long to wait before deleting archives')
-    parser.add_argument('--dbtype', dest='dbtype', required=True, \
+    parser.add_argument('--dbtype', dest='dbtype', default='sqlite3', \
         help='database platform to use for data storage')
     parser.add_argument('--dbfile', required='sqlite3' in sys.argv, \
-        dest='dbfile', \
+        dest='dbfile', default='scandata.db', \
         help='database file to use with sqlite3 dbtype')
     parser.add_argument('-H', '--dbhost', dest='dbhost', \
         help='system hosting the db (if note sqlite3)')
