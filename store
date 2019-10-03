@@ -19,9 +19,9 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-def cleanup(pidfile):
+def cleanup(file):
     ###	clean up
-    os.remove(pidfile)
+    os.remove(file)
 
 
 def get_xml_addrlist(xmlfile, sort=False):
@@ -66,7 +66,7 @@ def main():
     with open(pidfile, 'w') as pidf:
         pidf.write(str(os.getpid()))
 
-	
+
     # initialize some important variables
     today = datetime.datetime.now()
     dd = int(today.strftime('%s')) - 86400
@@ -79,6 +79,10 @@ def main():
     ### findall *.xml files in protocol directories
     for root, dirs, files in os.walk(conf['working_dir']):
         for file in files:
+            # skip empty files
+            if os.path.getsize(os.path.join(root, file)) == 0:
+                os.remove(os.path.join(root, file))
+                continue
             if file.endswith('.xml'):
                 files_to_process.append(os.path.join(root, file))
 
