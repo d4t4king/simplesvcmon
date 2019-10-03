@@ -3,8 +3,19 @@
 import sys
 import os
 from termcolor import cprint, colored
+from utils.sql import sql
+
 
 def main():
+    db = sql.sqlutils()
+    conf = db.load_config()
+
+    if conf['services'] is not None:
+        for svc in conf['services'].split(','):
+            #print(os.path.join(conf['working_dir'], svc))
+            for root, dirs, files in os.walk(svc):
+                for file in files:
+                    print(os.path.join(root, file))
 
 
 if __name__=='__main__':
