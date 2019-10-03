@@ -21,13 +21,21 @@ def main():
         #   how many total?
         #   how many dupes (if any)
         field = 'id'
-        for tbl in db.TABLES:
+        print("ID/record counts:")
+        for tbl in sorted(db.TABLES):
             if 'config' in tbl:
-                print("Table: {tn}, Count: {cnt}"\
+                print("\tTable: {tn}, Count: {cnt}"\
                     .format(tn=tbl, cnt=db._get_record_count(tbl)))
             else:
-                print("Table: {tn}, Count: {cnt}"\
+                print("\tTable: {tn}, Count: {cnt}"\
                     .format(tn=tbl, cnt=db._get_record_count(tbl, field, True)))
+        print("\n")
+        print("Distinct IP addresses:")
+        print("\tTable: {tn}, Count: {cnt}"\
+            .format(tn='hosts', cnt=db._get_record_count('hosts', 'ipv4addr', True)))
+        print("Distinct hostnames:")
+        print("\tTable: {tn}, COunt: {cnt}"\
+            .format(tn='hosts', cnt=db._get_record_count('hosts', 'hostname', True)))
     elif 'times' in args.action:
         # print stats about times
         #   mainly scan times
