@@ -53,6 +53,8 @@ def get_xml_addrlist(xmlfile, sort=False):
 def main():
     pp = pprint.PrettyPrinter(indent=4)
 
+    protected_directories = ['./utils', './.git']
+
     # check for existing pid file
     pidfile = '/tmp/store.pid.run'
     if os.path.exists(pidfile):
@@ -80,6 +82,14 @@ def main():
     for root, dirs, files in os.walk(conf['working_dir']):
         for file in files:
             # skip empty files
+            # but don't delete empty files from protected directories
+            cprint("root={}".format(root), "magenta", attrs=['bold'])
+            cprint("realroot={}".format(os.path.split(root)[0]), "magenta")
+            cprint("Protected: True", "green") if os.path.split(root)[0] in protected_directories else cprint("Protected: False", "red", attrs=['bold'])
+            if os.path.split(root)[0] in protected_directories:
+                cprint("Skipping {}...".format(os.path.join(root, file)), \
+                    "yellow")
+                continue
             if os.path.getsize(os.path.join(root, file)) == 0:
                 os.remove(os.path.join(root, file))
                 continue
