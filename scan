@@ -54,7 +54,7 @@ telnet, vnc, vpn"
 	svc_ports['mssql'] = "-p1433 "
 	svc_ports['mysql'] = "-p3306 "
 	svc_ports['oracle'] = "-p1521 "
-	svc_ports['postgre'] = "-p5432"
+	svc_ports['postgre'] = "-p5432 "
 	svc_ports['pclpjl'] = "-p9100 "
 	svc_ports['postgres'] = "-p5432 "
 	svc_ports['rdp'] = "-p3389 "
@@ -97,7 +97,7 @@ telnet, vnc, vpn"
 
 	print("MailHost is {}".format(conf['smtp_host']))
 	mail = mailer.mailer(smtp_host=conf['smtp_host'])
-	mail.send_scan_notice('ch@rlie.info', 'ch@rlie.info', '192.168.1.0/24', \
+	mail.send_scan_notice('ch@rlie.info', 'ch@rlie.info', args.net, \
 		'192.168.1.132', 'masscan', \
 		today.strftime("%m-%d-%Y %H:%M:%S"))
 
