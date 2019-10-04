@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+import argparse
+import pprint
+from termcolor import cprint, colored
+import atexit
+
+
+def cleanup(file):
+    ###	clean up
+    os.remove(file)
+
+
+def main():
+    pp = pprint.PrettyPrinter(indent=4)
+
+    parser = ArgumentParser("get more info about findings")
+    parser.add_argument('-s', '--service', dest='service', \
+        help="Service to investigate.")
+    args = parser.parse_args()
+
+    # check for existing pid file
+    pidfile = '/tmp/store.pid.run'
+    if os.path.exists(pidfile):
+        eprint(colored("PID file exists.  Is store already running?", "red", attrs=['bold']))
+        raise Exception("Verify if the program is currently running and/or delete the file at {}".format(pidfile))
+
+    # register the cleanup function to run at exit
+    atexit.register(cleanup, pidfile)
+
+    ### set pid file
+    with open(pidfile, 'w') as pidf:
+        pidf.write(str(os.getpid()))
+
+    # start logging (?)
+
+	svc_ports = {}
+	svc_ports['ftp'] = "21 "
+	svc_ports['http'] = "80,8000,8080 "
+	svc_ports['https'] = "443,8443 "
+	svc_ports['mssql'] = "1433 "
+	svc_ports['mysql'] = "3306 "
+	svc_ports['oracle'] = "1521 "
+	svc_ports['postgre'] = "5432"
+	svc_ports['pclpjl'] = "9100 "
+	svc_ports['postgres'] = "5432 "
+	svc_ports['rdp'] = "3389 "
+	svc_ports['rsh'] = "-p514 "
+	svc_ports['smtp'] = "-p25,965 "
+	svc_ports['ssh'] = "-p22 "
+	svc_ports['telnet'] = "-p23 "
+	svc_ports['vnc'] = "-p5800,5900-5910 "
+	svc_ports['vpn'] = "-p1701,1723 "
+
+    # take 'proto' in from argv (?) and verify it is valid
+    # get all of the ips in the database that reported the relevant port open
+    # set the nmap path
+    # loop through the list of targets and grab the banners for the protocol
+    # check if the banner is stored
+    #   if it is stored,
+    #   check if the one we just grabbed is the same as the stored one
+
+
+
+if __name__=='__main__':
+    main()

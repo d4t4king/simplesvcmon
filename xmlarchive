@@ -4,11 +4,13 @@ import sys
 import os
 from termcolor import cprint, colored
 from utils.sql import sql
-
+import subprocess
+from utils import utils
 
 def main():
     db = sql.sqlutils()
     conf = db.load_config()
+    u = utils.utils()
 
     if conf['services'] is not None:
         for svc in conf['services'].split(','):
@@ -16,6 +18,11 @@ def main():
             for root, dirs, files in os.walk(svc):
                 for file in files:
                     print(os.path.join(root, file))
+                    xz = u.which('xz')
+                    subprocess.call([xz, '-9', os.path.join(root, file)])
+    else:
+        print("You must configure services using the `set-config` -s option.")
+        exit(1)
 
 
 if __name__=='__main__':
