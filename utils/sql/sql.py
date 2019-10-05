@@ -97,6 +97,28 @@ class sqlutils():
                 .format(self.dbtype))
 
 
+    def __execute_sql_list(self, sql):
+        ary = []
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            conn = sqlite3.connect(self.dbfile)
+            c = conn.cursor()
+            for row in c.execute(sql):
+                ary.append(row[0])
+            return ary
+        else:
+            raise Exception("Don't know how to handle database type{}"\
+                .format(self.dbtype))
+
+
+    def get_hosts_by_port(self, port):
+        sql = ("SELECT h.ipv4addr FROM found f ",
+                "INNER JOIN hosts h ON f.host_id=h.id ",
+                "INNER JOIN ports p ON f.service_id=p.id ",
+                "WHERE p.port_num='{}' ;".format(port))
+        return self.__execute_sql_list("".join(sql))
+
+
     def dbsetup(self):
         if 'sqlite3' in self.dbtype:
             import sqlite3
