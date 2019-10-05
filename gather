@@ -83,14 +83,21 @@ def main():
         else:
             hosts = sqlu.get_hosts_by_port(svc_ports[args.service])
     # set the nmap path
-    nmap = u.which('nmap')
+    nmap = u.which('nmap') if u.which('nmap') else conf['nmap_path']
     if nmap is None and conf['nmap_path'] is None:
         print("You must install nmap or update the config with the path.")
         exit(1)
     # loop through the list of targets and grab the banners for the protocol
+    print("{}".format(hosts))
+    print("nmap={}".format(nmap))
     for h in hosts:
-        subprocess.call([nmap, "-sT", "-p", svc_ports[args.service], \
-            "--script", "banner", '--reason', h])
+        cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
+                    p=svc_ports[args.service]),
+                "--reason {h} | grep 'banner' | cut -d: -f2-"\
+                    .format(h=h))
+        print("{}".format(" ".join(cmd)))
+        #exit(1)
+        os.system("".join(cmd))
     # check if the banner is stored
     #   if it is stored,
     #   check if the one we just grabbed is the same as the stored one

@@ -4,6 +4,7 @@ import sys
 import os
 from termcolor import cprint, colored
 import argparse
+import pprint
 
 from utils.sql import sql
 
@@ -15,6 +16,8 @@ def main():
     # all these stats are in the db (somewhere), so set up the semi-"global"
     # db object to the utils class
     db = sql.sqlutils(dbtype='sqlite3', dbfile='scandata.db')
+
+    pp = pprint.PrettyPrinter(indent=4)
 
     if 'records' in args.action:
         # print out stats about the records:
@@ -40,6 +43,8 @@ def main():
         field = 'port_num'
         print("{} unique ports scanned to date."\
             .format(db._get_record_count('ports', field, True)))
+    elif 'config' in args.action:
+        pp.pprint("{}".format(db.load_config()))
     elif 'times' in args.action:
         # print stats about times
         #   mainly scan times
