@@ -59,7 +59,8 @@ def main():
     svc_ports['pclpjl'] = "9100"
     svc_ports['postgres'] = "5432"
     svc_ports['rdp'] = "3389"
-    svc_ports['rsh'] = "-p514"
+    svc_ports['rsh'] = "514"
+    svc_ports['smb'] = "137,139,445"
     svc_ports['smtp'] = "25,965"
     svc_ports['ssh'] = "22"
     svc_ports['telnet'] = "23"
@@ -93,11 +94,13 @@ def main():
     for h in hosts:
         cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
                     p=svc_ports[args.service]),
-                "--reason {h} | grep 'banner' | cut -d: -f2-"\
-                    .format(h=h))
+                "--reason {h} | grep 'banner' | cut -d: -f2- "\
+                    .format(h=h), \
+                " | sed -e 's/^ //g'")
         print("{}".format("".join(cmd)))
         #exit(1)
-        os.system("".join(cmd))
+        output = os.popen("".join(cmd)).read().strip()
+        print("{}".format(output))
     # check if the banner is stored
     #   if it is stored,
     #   check if the one we just grabbed is the same as the stored one
