@@ -27,6 +27,25 @@ class sqlutils():
         self.passw = None
         self.port = 0
 
+        self.svc_ports = {}
+        self.svc_ports['ftp'] = 21
+        self.svc_ports['http'] = [80,8000,8080]
+        self.svc_ports['https'] = "[43,8443]
+        self.svc_ports['mssql'] = 1433
+        self.svc_ports['mysql'] = 3306
+        self.svc_ports['oracle'] = 1521
+        self.svc_ports['postgre'] = 5432
+        self.svc_ports['pclpjl'] = 9100
+        self.svc_ports['postgres'] = 5432
+        self.svc_ports['rdp'] = 3389
+        self.svc_ports['rsh'] = 514
+        self.svc_ports['smb'] = [137,139,445]
+        self.svc_ports['smtp'] = [25,965]
+        self.svc_ports['ssh'] = 22
+        self.svc_ports['telnet'] = 23
+        self.vc_ports['vnc'] = [5800,5900,5901,5902,5903,5904,5905,5906,5907,5908,5909,5910]
+        self.svc_ports['vpn'] = [1701,1723]
+
         if 'dbtype' in kwargs.keys() and kwargs['dbtype'] is not None:
             self.dbtype = kwargs['dbtype']
         else:
