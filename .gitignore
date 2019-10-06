@@ -117,6 +117,7 @@ postgres*/
 pclpjl/
 rdp/
 rsh/
+smb
 smtp/
 ssh/
 telnet/
