@@ -118,7 +118,14 @@ def main():
         #print(str(filecount))
         #print("f={}".format(f))
         with open(f, 'r') as xml:
-            obj = untangle.parse(xml)
+            try:
+                obj = untangle.parse(xml)
+            except Exception as err:
+                if 'unclosed token' in str(err):
+                    cprint("Invalid XML: {f}".format(f=f), "yellow")
+                    cleanup(f)
+                else:
+                    raise err
             cprint(obj, "yellow")
             for host in obj.nmaprun.host:
                 cprint(host, "green")

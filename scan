@@ -39,6 +39,8 @@ def main():
 	parser.add_argument('service', type=str, help="Service to scan.")
 	parser.add_argument('--max-rate', type=int, default=10000, \
 		dest='max_rate', help='masscan max-rate')
+	parser.add_argument('-m', '--mail', default=False, action='store_true', \
+		dest='sendmail', help='enable mail notifications')
 	args = parser.parse_args()
 
 	assert isinstance(args.service, str), "Service should be a string: ftp, \
@@ -95,11 +97,12 @@ telnet, vnc, vpn"
 		scan_cmd += "-oX {xml} --reason --max-rate {mr} {net}"\
 			.format(xml=xmlname, mr=args.max_rate, net=args.net)
 
-	print("MailHost is {}".format(conf['smtp_host']))
-	mail = mailer.mailer(smtp_host=conf['smtp_host'])
-	mail.send_scan_notice('ch@rlie.info', 'ch@rlie.info', args.net, \
-		'192.168.1.132', 'masscan', \
-		today.strftime("%m-%d-%Y %H:%M:%S"))
+	if args.sendmail:
+		print("MailHost is {}".format(conf['smtp_host']))
+		mail = mailer.mailer(smtp_host=conf['smtp_host'])
+		mail.send_scan_notice('ch@rlie.info', 'ch@rlie.info', args.net, \
+			'192.168.1.132', 'masscan', \
+			today.strftime("%m-%d-%Y %H:%M:%S"))
 
 	### execute scan
 	print("Starting scan of protocol {} on network {}."\

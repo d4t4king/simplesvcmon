@@ -95,7 +95,7 @@ def main():
                     p=svc_ports[args.service]),
                 "--reason {h} | grep 'banner' | cut -d: -f2-"\
                     .format(h=h))
-        print("{}".format(" ".join(cmd)))
+        print("{}".format("".join(cmd)))
         #exit(1)
         os.system("".join(cmd))
     # check if the banner is stored
