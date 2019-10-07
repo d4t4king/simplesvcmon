@@ -48,7 +48,13 @@ def main():
         counts = {}
         for s in conf['services'].split(','):
             counts[s] = db.get_hostcount_by_port(db.svc_ports[s])
-        pp.pprint(counts)
+        for p in sorted(counts.keys()):
+            in_db = False
+            if db.port_exists(db.svc_ports[p]):
+                in_db = colored(u'\u2714', "green")
+            else:
+                in_db = colored(u'\u2718', "red")
+            print("{0:10s} {1:12d} {2:2s}".format(p, counts[p], in_db))
     elif 'config' in args.action:
         pp.pprint("{}".format(db.load_config()))
     elif 'times' in args.action:

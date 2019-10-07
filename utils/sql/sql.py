@@ -160,7 +160,7 @@ class sqlutils():
                         .format(",".join([str(p) for p in port])))
         else:
             raise TypeError("Unrecognized port type: {}".format(type(port)))
-        return self.__execute_sql_list("".join(sql))
+        return self.__execute_sql_int("".join(sql))
 
 
     def dbsetup(self):
