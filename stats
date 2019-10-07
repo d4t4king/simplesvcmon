@@ -43,6 +43,12 @@ def main():
         field = 'port_num'
         print("{} unique ports scanned to date."\
             .format(db._get_record_count('ports', field, True)))
+        print()
+        conf = db.load_config()
+        counts = {}
+        for s in conf['services'].split(','):
+            counts[s] = db.get_hostcount_by_port(db.svc_ports[s])
+        pp.pprint(counts)
     elif 'config' in args.action:
         pp.pprint("{}".format(db.load_config()))
     elif 'times' in args.action:
