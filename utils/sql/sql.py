@@ -30,7 +30,7 @@ class sqlutils():
         self.svc_ports = {}
         self.svc_ports['ftp'] = 21
         self.svc_ports['http'] = [80,8000,8080]
-        self.svc_ports['https'] = "[43,8443]
+        self.svc_ports['https'] = [43,8443]
         self.svc_ports['mssql'] = 1433
         self.svc_ports['mysql'] = 3306
         self.svc_ports['oracle'] = 1521
@@ -43,7 +43,7 @@ class sqlutils():
         self.svc_ports['smtp'] = [25,965]
         self.svc_ports['ssh'] = 22
         self.svc_ports['telnet'] = 23
-        self.vc_ports['vnc'] = [5800,5900,5901,5902,5903,5904,5905,5906,5907,5908,5909,5910]
+        self.svc_ports['vnc'] = [5800,5900,5901,5902,5903,5904,5905,5906,5907,5908,5909,5910]
         self.svc_ports['vpn'] = [1701,1723]
 
         if 'dbtype' in kwargs.keys() and kwargs['dbtype'] is not None:
@@ -131,10 +131,35 @@ class sqlutils():
 
 
     def get_hosts_by_port(self, port):
-        sql = ("SELECT h.ipv4addr FROM found f ",
-                "INNER JOIN hosts h ON f.host_id=h.id ",
-                "INNER JOIN ports p ON f.service_id=p.id ",
-                "WHERE p.port_num='{}' ;".format(port))
+        if isinstance(port, int):
+            sql = ("SELECT DISTINCT h.ipv4addr FROM found f ",
+                    "INNER JOIN hosts h ON f.host_id=h.id ",
+                    "INNER JOIN ports p ON f.service_id=p.id ",
+                    "WHERE p.port_num='{}' ;".format(port))
+        elif isinstance(port, list):
+            sql = ("SELECT DISTINCT h.ipv4addr FROM found f ",
+                    "INNER JOIN hosts h ON f.host_id=h.id ",
+                    "INNER JOIN ports p ON f.service_id=p.id ",
+                    "WHERE p.port_num IN ({});".format(",".join(port)))
+        else:
+            raise TypeError("Unrecognized port type: {}".format(type(port)))
+        return self.__execute_sql_list("".join(sql))
+
+
+    def get_hostcount_by_port(self, port):
+        if isinstance(port, int):
+            sql = ("SELECT COUNT(DISTINCT h.ipv4addr) FROM found f ",
+                    "INNER JOIN hosts h ON f.host_id=h.id ",
+                    "INNER JOIN ports p ON f.service_id=p.id ",
+                    "WHERE p.port_num='{}' ;".format(port))
+        elif isinstance(port, list):
+            sql = ("SELECT COUNT(DISTINCT h.ipv4addr) FROM found f ",
+                    "INNER JOIN hosts h ON f.host_id=h.id ",
+                    "INNER JOIN ports p ON f.service_id=p.id ",
+                    "WHERE p.port_num IN ({});"\
+                        .format(",".join([str(p) for p in port])))
+        else:
+            raise TypeError("Unrecognized port type: {}".format(type(port)))
         return self.__execute_sql_list("".join(sql))
 
 
