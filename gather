@@ -48,41 +48,21 @@ def main():
 
     # start logging (?)
 
-    svc_ports = {}
-    svc_ports['ftp'] = "21"
-    svc_ports['http'] = "80,8000,8080"
-    svc_ports['https'] = "443,8443"
-    svc_ports['mssql'] = "1433"
-    svc_ports['mysql'] = "3306"
-    svc_ports['oracle'] = "1521"
-    svc_ports['postgre'] = "5432"
-    svc_ports['pclpjl'] = "9100"
-    svc_ports['postgres'] = "5432"
-    svc_ports['rdp'] = "3389"
-    svc_ports['rsh'] = "514"
-    svc_ports['smb'] = "137,139,445"
-    svc_ports['smtp'] = "25,965"
-    svc_ports['ssh'] = "22"
-    svc_ports['telnet'] = "23"
-    svc_ports['vnc'] = "5800,5900,5901,5902,5903,5904,5905,5906,5907,5908,5909,5910"
-    svc_ports['vpn'] = "1701,1723"
-
-    print("Available services: {}".format("|".join(svc_ports.keys())))
+    print("Available services: {}".format("|".join(sqlu.svc_ports.keys())))
     # take 'proto' in from argv (?) and verify it is valid
     hosts = []
     # get all of the ips in the database that reported the relevant port open
-    if re.search(r"(?:{})".format("|".join(svc_ports.keys())), args.service) \
+    if re.search(r"(?:{})".format("|".join(sqlu.svc_ports.keys())), args.service) \
         is not None:
         if args.v: print("Service ({}) matched an expected service."\
             .format(args.service))
-        if svc_ports[args.service].count(',') > 0:
+        if isinstance(sqlu.svc_ports[args.service], list):
             if args.v: print("Service has more than one port: {}"\
-                .format(svc_ports[args.service]))
-            ports = svc_ports[args.service].split(',')
-            for p in ports:
+                .format(sqlu.svc_ports[args.service]))
+            for p in sqlu.svc_ports[args.service]:
                 hosts.extend(sqlu.get_hosts_by_port(p))
         else:
-            hosts = sqlu.get_hosts_by_port(svc_ports[args.service])
+            hosts = sqlu.get_hosts_by_port(sqlu.svc_ports[args.service])
     # set the nmap path
     nmap = u.which('nmap') if u.which('nmap') else conf['nmap_path']
     if nmap is None and conf['nmap_path'] is None:
@@ -93,7 +73,7 @@ def main():
     print("nmap={}".format(nmap))
     for h in hosts:
         cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
-                    p=svc_ports[args.service]),
+                    p=sqlu.svc_ports[args.service]),
                 "--reason {h} | grep 'banner' | cut -d: -f2- "\
                     .format(h=h), \
                 " | sed -e 's/^ //g'")
