@@ -315,7 +315,12 @@ class sqlutils():
 
 
     def port_exists(self, port):
-        return self._record_exists('ports', 'port_num', port)
+        if isinstance(port, int):
+            return self._record_exists('ports', 'port_num', port)
+        elif isinstance(port, list):
+            print("Got a list")
+        else:
+            raise TypeError("Unrecognized port type: {}".format(type(port)))
 
 
     def _record_exists_2f(self, table, field, value, field2, value2):
