@@ -41,9 +41,15 @@ def main():
             .format(tn='hosts', cnt=db._get_record_count('hosts', 'hostname', True)))
     elif 'ports' in args.action:
         field = 'port_num'
+        # display the number of unique ports that have been scanned
         print("{} unique ports scanned to date."\
             .format(db._get_record_count('ports', field, True)))
         print()
+        # display the unique ports that have been scanned
+        print("{}".format(db.get_ports()))
+        print()
+        # disply the hostcount for each service, denoting Which
+        # have actually been scanned
         conf = db.load_config()
         counts = {}
         for s in conf['services'].split(','):

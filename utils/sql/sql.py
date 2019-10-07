@@ -30,7 +30,7 @@ class sqlutils():
         self.svc_ports = {}
         self.svc_ports['ftp'] = 21
         self.svc_ports['http'] = [80,8000,8080]
-        self.svc_ports['https'] = [43,8443]
+        self.svc_ports['https'] = [443,8443]
         self.svc_ports['mssql'] = 1433
         self.svc_ports['mysql'] = 3306
         self.svc_ports['oracle'] = 1521
@@ -318,7 +318,14 @@ class sqlutils():
         if isinstance(port, int):
             return self._record_exists('ports', 'port_num', port)
         elif isinstance(port, list):
-            print("Got a list")
+            sql = ("SELECT id FROM ports ",
+                    "WHERE port_num IN ({});".format(\
+                        ",".join([str(p) for p in port])))
+            res = self.__execute_sql_int("".join(sql))
+            if res is not None and res != 0:
+                return True
+            else:
+                return False
         else:
             raise TypeError("Unrecognized port type: {}".format(type(port)))
 
@@ -420,6 +427,11 @@ class sqlutils():
             return int(res[0])
         else:
             return None
+
+
+    def get_ports(self):
+        sql = "SELECT port_num FROM ports;"
+        return self.__execute_sql_list(sql)
 
 
     def _insert_record(self, table, fields):

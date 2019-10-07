@@ -160,7 +160,7 @@ def main():
                             fields['ipv4address'] - 'unresolved'
                     #print("fields: {}".format(fields))
                     db.add_host(fields)
-                if db.port_exists(host.ports.port['portid']):
+                if db.port_exists(int(host.ports.port['portid'])):
                     port_id = db.get_port_id(host.ports.port['portid'])
                     print("Port exists: {} ({})".format( \
                         host.ports.port['portid'], port_id))
