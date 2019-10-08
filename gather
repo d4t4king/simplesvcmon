@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
 
     # check for existing pid file
-    pidfile = '/tmp/store.pid.run'
+    pidfile = '/tmp/gather.pid.run'
     if os.path.exists(pidfile):
         eprint(colored("PID file exists.  Is store already running?", "red", attrs=['bold']))
         raise Exception("Verify if the program is currently running and/or delete the file at {}".format(pidfile))
@@ -72,11 +72,21 @@ def main():
     print("{}".format(hosts))
     print("nmap={}".format(nmap))
     for h in hosts:
-        cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
+        if isinstance(sqlu.svc_ports[args.service], list):
+            cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
                     p=",".join([str(p) for p in sqlu.svc_ports[args.service]])),
                 "--reason {h} | grep 'banner' | cut -d: -f2- "\
                     .format(h=h), \
                 " | sed -e 's/^ //g'")
+        elif isinstance(sqlu.svc_ports[args.service], int):
+            cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
+                    p=sqlu.svc_ports[args.service]),
+                "--reason {h} | grep 'banner' | cut -d: -f2- "\
+                    .format(h=h), \
+                " | sed -e 's/^ //g'")
+        else:
+            raise TypeError("Unrecognized type for sqlu.svc_ports[{}]: {}"\
+                .format(args.service, type(sqlu.svc_ports[args.service])))
         print("{}".format("".join(cmd)))
         #exit(1)
         output = os.popen("".join(cmd)).read().strip()
