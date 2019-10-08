@@ -73,14 +73,14 @@ def main():
     print("nmap={}".format(nmap))
     for h in hosts:
         cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
-                    p=sqlu.svc_ports[args.service]),
+                    p=",".join([str(p) for p in sqlu.svc_ports[args.service]])),
                 "--reason {h} | grep 'banner' | cut -d: -f2- "\
                     .format(h=h), \
                 " | sed -e 's/^ //g'")
         print("{}".format("".join(cmd)))
         #exit(1)
         output = os.popen("".join(cmd)).read().strip()
-        print("{}".format(output))
+        print("|{}|".format(output))
     # check if the banner is stored
     #   if it is stored,
     #   check if the one we just grabbed is the same as the stored one
