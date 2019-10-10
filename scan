@@ -47,28 +47,6 @@ def main():
 http, https, mssql, mysql, oracle, postgre, pclpjl, rdp, rsh, smtp, ssh, \
 telnet, vnc, vpn"
 
-	working_dir = '.'
-
-	svc_ports = {}
-	svc_ports['ftp'] = "-p21 "
-	svc_ports['http'] = "-p80,8000,8080 "
-	svc_ports['https'] = "-p443,8443 "
-	svc_ports['mssql'] = "-p1433 "
-	svc_ports['mysql'] = "-p3306 "
-	svc_ports['oracle'] = "-p1521 "
-	svc_ports['postgre'] = "-p5432 "
-	svc_ports['pclpjl'] = "-p9100 "
-	svc_ports['postgres'] = "-p5432 "
-	svc_ports['rdp'] = "-p3389 "
-	svc_ports['rsh'] = "-p514 "
-	svc_ports['smb'] = "-p137,139,445 "
-	svc_ports['smtp'] = "-p25,965 "
-	svc_ports['ssh'] = "-p22 "
-	svc_ports['telnet'] = "-p23 "
-	svc_ports['vnc'] = "-p5800,5900-5910 "
-	svc_ports['vpn'] = "-p1701,1723 "
-
-
 ### set a pid file
 	with open('/tmp/scan.pid.run', 'w') as pidf:
 		pidf.write(str(os.getpid()))
@@ -76,6 +54,9 @@ telnet, vnc, vpn"
 	sqlu = sql.sqlutils()
 	conf = sqlu.load_config()
 
+	working_dir = conf['working_dir'] \
+		if 'working_dir' in conf.keys() and conf['working_dir'] is not None \
+			else '.'
 ### Get net and port/service to scan (args?)
 ### check for and set up constants for masscan, nmap, exclusion files
 	masscan = which('masscan') if which('masscan') is not None else conf['masscan_path']
@@ -85,7 +66,12 @@ telnet, vnc, vpn"
 
 	today = datetime.datetime.now()
 	scan_cmd = None
-	scan_cmd = "{} {}".format(masscan, svc_ports[args.service])
+	ports = None
+	if isinstance(sqlu.svc_ports[args.service], list):
+		ports = ",".join([str(p) for p in sqlu.svc_ports[args.service]])
+	else:
+		ports = str(sqlu.svc_ports[args.service])
+	scan_cmd = "{} -p {} ".format(masscan, ports)
 	if not os.path.exists(os.path.join(working_dir, args.service)):
 		os.makedirs(os.path.join(working_dir, args.service))
 	xmlname = "{0}/{1}/{2}_{1}_{3}.xml"\
