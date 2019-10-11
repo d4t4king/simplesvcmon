@@ -100,6 +100,18 @@ class sqlutils():
                 .format(self.dbtype))
 
 
+    def __execute_sql_bool(self, sql):
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            conn = c.connect(self.dbfile)
+            c = conn.cursor()
+            res = c.fetchone()
+            if res:
+                return True
+            else:
+                return False
+
+
     def __execute_sql_int(self, sql):
         if 'sqlite3' in self.dbtype:
             import sqlite3
@@ -538,3 +550,13 @@ class sqlutils():
         else:
             raise Exception("Don't know how to handle db type: {}".format(
                 self.dbtype))
+
+
+    def exact_record_exists(self, table, params):
+        assert isinstance(params, dict), \
+            "Argument 'params' to exact_record_exists() should be dict()."
+
+        sql = "SELECT * FROM {tn} WHERE ".format(tn=table)
+        for k,v in params.items():
+            sql += "{k}='{v}' AND ".format(k=k, v=v)
+        print(sql)
