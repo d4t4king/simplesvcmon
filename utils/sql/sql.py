@@ -472,8 +472,8 @@ class sqlutils():
             return None
 
 
-    def get_ports(self):
-        sql = "SELECT port_num FROM ports;"
+    def get_all_ports(self):
+        sql = "SELECT DISTINCT port_num FROM ports;"
         return self.__execute_sql_list(sql)
 
 

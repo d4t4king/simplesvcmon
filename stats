@@ -46,7 +46,7 @@ def main():
             .format(db._get_record_count('ports', field, True)))
         print()
         # display the unique ports that have been scanned
-        print("{}".format(db.get_ports()))
+        print("{}".format(db.get_all_ports()))
         print()
         # disply the hostcount for each service, denoting Which
         # have actually been scanned
