@@ -94,13 +94,13 @@ def main():
             print("{}".format("".join(cmd)))
             #exit(1)
             output = os.popen("".join(cmd)).read().strip()
-            print("|{}|".format(output))
+            #print("|{}|".format(output))
         # check if the banner is stored
             params = {}
             params['banner'] = output
             params['host_id'] = sqlu.get_host_id(h)
-            print("args.service: {}".format(args.service))
-            print("sqlu.svc_ports[{s}]: {p}".format(s=args.service, p=sqlu.svc_ports[args.service]))
+            #print("args.service: {}".format(args.service))
+            #print("sqlu.svc_ports[{s}]: {p}".format(s=args.service, p=sqlu.svc_ports[args.service]))
             params['port_id'] = sqlu.get_port_id(sqlu.svc_ports[args.service])
             if sqlu.banner_exists(params):
         #   if it is stored,
