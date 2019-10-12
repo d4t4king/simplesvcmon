@@ -103,8 +103,16 @@ class sqlutils():
     def __execute_sql_bool(self, sql):
         if 'sqlite3' in self.dbtype:
             import sqlite3
-            conn = c.connect(self.dbfile)
+            conn = sqlite3.connect(self.dbfile)
             c = conn.cursor()
+            try:
+                c.execute(sql)
+            except sqlite3.OperationalError as err:
+                if 'no such table' in str(err):
+                    self.dbsetup()
+                    c.execute(sql)
+                else:
+                    raise(err)
             res = c.fetchone()
             if res:
                 return True
@@ -222,6 +230,12 @@ class sqlutils():
                             "header_last_updated INTEGER, ",
                             "html_title TEXT, title_first_found INTEGER, ",
                             "title_last_updated INTEGER);")
+            tables['banners'] = ("CREATE TABLE IF NOT EXISTS banners ",
+                            "(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, ",
+                            "host_id INTEGER NOT NULL, ",
+                            "port_id INTEGER NOT NULL, ",
+                            "banner TEXT, first_found INTEGER, ",
+                            "last_found INTEGER);")
             for k,v in tables.items():
                 #print("{}".format("".join(v)))
                 self.__execute_sql_void("".join(v))
@@ -342,6 +356,15 @@ class sqlutils():
             raise TypeError("Unrecognized port type: {}".format(type(port)))
 
 
+    def banner_exists(self, params):
+        sql = "SELECT id FROM banners WHERE "
+        tmp = []
+        for k,v in params.items():
+            tmp.append("{k}='{v}'".format(k=k, v=v))
+        sql += " AND ".join(tmp)
+        return self.__execute_sql_bool(sql)
+
+
     def _record_exists_2f(self, table, field, value, field2, value2):
         sys.dont_write_bytecode = True
         #print("|{}-{}|".format(value, value2))
@@ -380,13 +403,20 @@ class sqlutils():
 
 
     def get_port_id(self, port):
-        sys.dont_write_bytecode = True
+        res = None
+        sql = None
+        if isinstance(port, int):
+            sql = "SELECT id FROM ports WHERE port_num={}".format(p)
+        elif isinstance(port, list):
+            sql = "SELECT id FROM ports WHERE port_num IN ('{}')".format(
+                    "','".join([str(p) for p in port]))
+        else:
+            raise TypeError("Unrecognized type for port.  (int|list)")
         if 'sqlite3' in self.dbtype:
             import sqlite3
             conn = sqlite3.connect(self.dbfile)
             c = conn.cursor()
-            c.execute("SELECT id FROM ports WHERE port_num=?", \
-                (port,))
+            c.execute(sql)
             res = c.fetchone()
             #print("|{}|".format(res))
             conn.close()
@@ -475,6 +505,10 @@ class sqlutils():
         self._insert_record('found', found_dict)
 
 
+    def add_banner(self, bann_dict):
+        self._insert_record('banners', bann_dict)
+
+
     def _update_record(self, table, fields, conds):
         assert isinstance(fields, tuple), \
             "The fields parameter should be a tuple of field/value pairs to update."
@@ -557,6 +591,8 @@ class sqlutils():
             "Argument 'params' to exact_record_exists() should be dict()."
 
         sql = "SELECT * FROM {tn} WHERE ".format(tn=table)
+        tmp = []
         for k,v in params.items():
-            sql += "{k}='{v}' AND ".format(k=k, v=v)
-        print(sql)
+            tmp.append("{k}='{v}'".format(k=k, v=v))
+        sql += " AND ".join(tmp)
+        return self.__execute_sql_bool(sql)
