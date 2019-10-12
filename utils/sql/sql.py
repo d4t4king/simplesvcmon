@@ -224,7 +224,8 @@ class sqlutils():
                             "avg_atom_time DOUBLE);")
             tables['http_meta'] = ("CREATE TABLE IF NOT EXISTS http_meta ",
                             "(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, ",
-                            "service TEXT, ip_addr TEXT, ",
+                            "port_id INTEGER NOT NULL, ",
+                            "host_id INTEGER NOT NULL, ",
                             "server_header TEXT, ",
                             "header_first_found INTEGER, ",
                             "header_last_updated INTEGER, ",
