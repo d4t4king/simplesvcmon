@@ -8,6 +8,7 @@ import subprocess
 import os
 import sys
 import re
+import datetime
 
 from utils.sql import sql
 from utils import utils
@@ -19,6 +20,8 @@ def cleanup(file):
 
 def main():
     pp = pprint.PrettyPrinter(indent=4)
+
+    today = datetime.datetime.now()
 
     parser = argparse.ArgumentParser("get more info about findings")
     parser.add_argument('-s', '--service', dest='service', required=True, \
@@ -92,8 +95,20 @@ def main():
         output = os.popen("".join(cmd)).read().strip()
         print("|{}|".format(output))
     # check if the banner is stored
+        params = {}
+        params['banner'] = output
+        params['host_id'] = sqlu.get_host_id(h)
+        print("args.service: {}".format(args.service))
+        print("sqlu.svc_ports[{s}]: {p}".format(s=args.service, p=sqlu.svc_ports[args.service]))
+        params['port_id'] = sqlu.get_port_id(sqlu.svc_ports[args.service])
+        if sqlu.banner_exists(params):
     #   if it is stored,
     #   check if the one we just grabbed is the same as the stored one
+            print("Banner exists: {b}".format(b=output))
+        else:
+            params['first_found'] = today.strftime('%s')
+            params['last_found'] = today.strftime('%s')
+            sqlu.add_banner(params)
 
 
 
