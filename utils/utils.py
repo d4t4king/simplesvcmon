@@ -23,3 +23,9 @@ class utils():
             return True
         else:
             return False
+
+
+    @staticmethod
+    def cleanup(file):
+        ###	clean up
+        os.remove(file)
