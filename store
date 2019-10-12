@@ -12,6 +12,7 @@ import untangle
 import atexit
 import re
 import socket
+import argparse
 from utils.sql import sql
 
 
@@ -51,6 +52,11 @@ def get_xml_addrlist(xmlfile, sort=False):
 
 
 def main():
+    parser = argparse.ArgumentParser("store xml data to sqlite3")
+    parser.add_argument('-v', '--verbose', action='store_true', \
+        dest='v', help="Increase verbosity of output.")
+    args = parser.parse_args()
+
     pp = pprint.PrettyPrinter(indent=4)
 
     protected_directories = ['utils', '.git']
@@ -179,7 +185,10 @@ def main():
                     params['service_id'] = db.get_port_id(host.ports.port['portid'])
                     params['host_id'] = db.get_host_id(host.address['addr'])
                     params['last_found'] = int(host['endtime'])
-                    if not db.exact_record_exists('found', params):
+                    if db.exact_record_exists('found', params):
+                        print("Exact record exists.  Skipping. ({p})".format(
+                            p=params))
+                    else:
                         fields = ('last_found', int(host['endtime']))
                         conds = ('service_id', db.get_port_id(host.ports.port['portid']), \
                             'host_id', db.get_host_id(host.address['addr']))
