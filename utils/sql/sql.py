@@ -132,7 +132,23 @@ class sqlutils():
             else:
                 return 0
         else:
-            raise Exception("Don't know how to handle database type{}"\
+            raise Exception("Don't know how to handle database type {}"\
+                .format(self.dbtype))
+
+
+    def __execute_sql_str(self, sql):
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            conn = sqlite3.connect(self.dbfile)
+            c = conn.cursor()
+            c.execute(sql)
+            res = c.fetchone()
+            if res:
+                return str(res[0])
+            else:
+                return None
+        else:
+            raise Exception("Don't know hot to handle database type {}"\
                 .format(self.dbtype))
 
 
@@ -597,3 +613,15 @@ class sqlutils():
             tmp.append("{k}='{v}'".format(k=k, v=v))
         sql += " AND ".join(tmp)
         return self.__execute_sql_bool(sql)
+
+
+    def get_port(self, port_id):
+        sql = "SELECT DISTINCT port_num FROM ports WHERE id={}"\
+                .format(port_id)
+        return self.__execute_sql_int(sql)
+
+
+    def get_host(self, host_id, ip_only=False):
+        sql = "SELECT DISTINCT hostname, ipv4addr FROM hosts WHERE id={}"\
+                .format(host_id)
+        return self.__execute_sql_str(sql)
