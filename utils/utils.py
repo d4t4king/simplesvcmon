@@ -16,8 +16,8 @@ class utils():
 
     @staticmethod
     def is_alive(host, port=None):
-        from scapy.all import sr, srp, IP, UDP, ICMP, TCP, ARP, Ether
-        ans, unans = sr(IP(dst=host)/ICMP(), retry=0, timeout=1)
+        from scapy.all import sr, IP, ICMP, TCP
+        ans, unans = sr(IP(dst=host)/ICMP(), retry=0, timeout=1, verbose=False)
         print("ans: {a}, unans: {u}".format(a=ans, u=unans))
         if ans is not None:
             return True
