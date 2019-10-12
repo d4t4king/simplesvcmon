@@ -43,7 +43,6 @@ def main():
     sqlu = sql.sqlutils()
     # get the config info
     conf = sqlu.load_config()
-    u = utils.utils()
 
     ### set pid file
     with open(pidfile, 'w') as pidf:
@@ -67,7 +66,8 @@ def main():
         else:
             hosts = sqlu.get_hosts_by_port(sqlu.svc_ports[args.service])
     # set the nmap path
-    nmap = u.which('nmap') if u.which('nmap') else conf['nmap_path']
+    nmap = utils.utils.which('nmap') \
+        if utils.utils.which('nmap') else conf['nmap_path']
     if nmap is None and conf['nmap_path'] is None:
         print("You must install nmap or update the config with the path.")
         exit(1)
@@ -75,41 +75,43 @@ def main():
     print("{}".format(hosts))
     print("nmap={}".format(nmap))
     for h in hosts:
-        if isinstance(sqlu.svc_ports[args.service], list):
-            cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
-                    p=",".join([str(p) for p in sqlu.svc_ports[args.service]])),
-                "--reason {h} | grep 'banner' | cut -d: -f2- "\
-                    .format(h=h), \
-                " | sed -e 's/^ //g'")
-        elif isinstance(sqlu.svc_ports[args.service], int):
-            cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
-                    p=sqlu.svc_ports[args.service]),
-                "--reason {h} | grep 'banner' | cut -d: -f2- "\
-                    .format(h=h), \
-                " | sed -e 's/^ //g'")
+        if utils.utils.is_alive(h):
+            if isinstance(sqlu.svc_ports[args.service], list):
+                cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
+                        p=",".join([str(p) for p in sqlu.svc_ports[args.service]])),
+                    "--reason {h} | grep 'banner' | cut -d: -f2- "\
+                        .format(h=h), \
+                    " | sed -e 's/^ //g'")
+            elif isinstance(sqlu.svc_ports[args.service], int):
+                cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
+                        p=sqlu.svc_ports[args.service]),
+                    "--reason {h} | grep 'banner' | cut -d: -f2- "\
+                        .format(h=h), \
+                    " | sed -e 's/^ //g'")
+            else:
+                raise TypeError("Unrecognized type for sqlu.svc_ports[{}]: {}"\
+                    .format(args.service, type(sqlu.svc_ports[args.service])))
+            print("{}".format("".join(cmd)))
+            #exit(1)
+            output = os.popen("".join(cmd)).read().strip()
+            print("|{}|".format(output))
+        # check if the banner is stored
+            params = {}
+            params['banner'] = output
+            params['host_id'] = sqlu.get_host_id(h)
+            print("args.service: {}".format(args.service))
+            print("sqlu.svc_ports[{s}]: {p}".format(s=args.service, p=sqlu.svc_ports[args.service]))
+            params['port_id'] = sqlu.get_port_id(sqlu.svc_ports[args.service])
+            if sqlu.banner_exists(params):
+        #   if it is stored,
+        #   check if the one we just grabbed is the same as the stored one
+                print("Banner exists: {b}".format(b=output))
+            else:
+                params['first_found'] = today.strftime('%s')
+                params['last_found'] = today.strftime('%s')
+                sqlu.add_banner(params)
         else:
-            raise TypeError("Unrecognized type for sqlu.svc_ports[{}]: {}"\
-                .format(args.service, type(sqlu.svc_ports[args.service])))
-        print("{}".format("".join(cmd)))
-        #exit(1)
-        output = os.popen("".join(cmd)).read().strip()
-        print("|{}|".format(output))
-    # check if the banner is stored
-        params = {}
-        params['banner'] = output
-        params['host_id'] = sqlu.get_host_id(h)
-        print("args.service: {}".format(args.service))
-        print("sqlu.svc_ports[{s}]: {p}".format(s=args.service, p=sqlu.svc_ports[args.service]))
-        params['port_id'] = sqlu.get_port_id(sqlu.svc_ports[args.service])
-        if sqlu.banner_exists(params):
-    #   if it is stored,
-    #   check if the one we just grabbed is the same as the stored one
-            print("Banner exists: {b}".format(b=output))
-        else:
-            params['first_found'] = today.strftime('%s')
-            params['last_found'] = today.strftime('%s')
-            sqlu.add_banner(params)
-
+            print("Host offline ({h})".format(h=h))
 
 
 if __name__=='__main__':
