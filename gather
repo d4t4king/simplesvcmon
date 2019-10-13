@@ -2,6 +2,7 @@
 
 import argparse
 import pprint
+#from typing import Tuple
 from termcolor import cprint, colored
 import atexit
 import subprocess
@@ -17,102 +18,148 @@ def cleanup(file):
     ###	clean up
     os.remove(file)
 
+def get_banner(nmap, host, ports):
+    if isinstance(ports, list):
+        cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
+                p=",".join([str(p) for p in ports])),
+            "--reason {h} | grep 'banner' | cut -d: -f2- "\
+                .format(h=host), \
+            " | sed -e 's/^ //g'")
+    elif isinstance(ports, int):
+        cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
+                p=ports),
+            "--reason {h} | grep 'banner' | cut -d: -f2- "\
+                .format(h=host), \
+            " | sed -e 's/^ //g'")
+    else:
+        raise TypeError("Unrecognized type for ports: {}"\
+            .format(type(ports)))
+    cprint("{}".format("".join(cmd)), "cyan")
+    #exit(1)
+    output = os.popen("".join(cmd)).read().strip()
+    return output
+
+
+def get_server_header(nmap, params):
+    assert isinstance(params, dict), \
+        "params must be a dict() containing host and port IDs"
+    cmd = ("{nm} -sT -p {p} --script http-server-header ".format(nm=nmap, \
+                p=params['sqlu'].get_port(params['port_id'])),
+            "{h} | grep 'http-server-header' | cut -d: -f2- "\
+                .format(h=params['sqlu'].get_host(params['host_id'], True)), \
+            " | sed -e 's/^ //g'")
+    cprint("{}".format("".join(cmd)), "magenta")
+    output = os.popen("".join(cmd)).read().strip()
+    return output
+
+def get_http_title(nmap, params):
+    assert isinstance(params, dict), \
+        "params must be a dict() containing host and port IDs"
+    cmd = ("{nm} -sT -p {p} --script http-title ".format(nm=nmap, \
+                p=params['sqlu'].get_port(params['port_id'])),
+            "{h} | grep 'http-title' | cut -d: -f2- "\
+                .format(h=params['sqlu'].get_host(params['host_id'], True)), \
+            " | sed -e 's/^ //g'")
+    cprint("{}".format("".join(cmd)), "yellow")
+    output = os.popen("".join(cmd)).read().strip()
+    return output
+
 
 def main():
-    pp = pprint.PrettyPrinter(indent=4)
+    try:
+        pp = pprint.PrettyPrinter(indent=4)
 
-    today = datetime.datetime.now()
+        today = datetime.datetime.now()
 
-    parser = argparse.ArgumentParser("get more info about findings")
-    parser.add_argument('-s', '--service', dest='service', required=True, \
-        help="Service to investigate.")
-    parser.add_argument('-v', '--verbose', dest='v', action='store_true', \
-        help="Make output more verbose.")
-    args = parser.parse_args()
+        parser = argparse.ArgumentParser("get more info about findings")
+        parser.add_argument('-s', '--service', dest='service', required=True, \
+            help="Service to investigate.")
+        parser.add_argument('-v', '--verbose', dest='v', action='store_true', \
+            help="Make output more verbose.")
+        args = parser.parse_args()
 
-    # check for existing pid file
-    pidfile = '/tmp/gather.pid.run'
-    if os.path.exists(pidfile):
-        eprint(colored("PID file exists.  Is store already running?", "red", attrs=['bold']))
-        raise Exception("Verify if the program is currently running and/or delete the file at {}".format(pidfile))
+        # check for existing pid file
+        pidfile = '/tmp/gather.pid.run'
+        if os.path.exists(pidfile):
+            eprint(colored("PID file exists.  Is store already running?", "red", attrs=['bold']))
+            raise Exception("Verify if the program is currently running and/or delete the file at {}".format(pidfile))
 
-    # register the cleanup function to run at exit
-    atexit.register(cleanup, pidfile)
+        # register the cleanup function to run at exit
+        atexit.register(cleanup, pidfile)
 
-    # set up the sql object
-    sqlu = sql.sqlutils()
-    # get the config info
-    conf = sqlu.load_config()
+        # set up the sql object
+        sqlu = sql.sqlutils()
+        # get the config info
+        conf = sqlu.load_config()
 
-    ### set pid file
-    with open(pidfile, 'w') as pidf:
-        pidf.write(str(os.getpid()))
+        ### set pid file
+        with open(pidfile, 'w') as pidf:
+            pidf.write(str(os.getpid()))
 
-    # start logging (?)
+        # start logging (?)
 
-    print("Available services: {}".format("|".join(sqlu.svc_ports.keys())))
-    # take 'proto' in from argv (?) and verify it is valid
-    hosts = []
-    # get all of the ips in the database that reported the relevant port open
-    if re.search(r"(?:{})".format("|".join(sqlu.svc_ports.keys())), args.service) \
-        is not None:
-        if args.v: print("Service ({}) matched an expected service."\
-            .format(args.service))
-        if isinstance(sqlu.svc_ports[args.service], list):
-            if args.v: print("Service has more than one port: {}"\
-                .format(sqlu.svc_ports[args.service]))
-            for p in sqlu.svc_ports[args.service]:
-                hosts.extend(sqlu.get_hosts_by_port(p))
-        else:
-            hosts = sqlu.get_hosts_by_port(sqlu.svc_ports[args.service])
-    # set the nmap path
-    nmap = utils.utils.which('nmap') \
-        if utils.utils.which('nmap') else conf['nmap_path']
-    if nmap is None and conf['nmap_path'] is None:
-        print("You must install nmap or update the config with the path.")
-        exit(1)
-    # loop through the list of targets and grab the banners for the protocol
-    print("{}".format(hosts))
-    print("nmap={}".format(nmap))
-    for h in hosts:
-        if utils.utils.is_alive(h):
+        print("Available services: {}".format("|".join(sqlu.svc_ports.keys())))
+        # take 'proto' in from argv (?) and verify it is valid
+        hosts = []
+        # get all of the ips in the database that reported the relevant port open
+        if re.search(r"(?:{})".format("|".join(sqlu.svc_ports.keys())), args.service) \
+            is not None:
+            if args.v: print("Service ({}) matched an expected service."\
+                .format(args.service))
             if isinstance(sqlu.svc_ports[args.service], list):
-                cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
-                        p=",".join([str(p) for p in sqlu.svc_ports[args.service]])),
-                    "--reason {h} | grep 'banner' | cut -d: -f2- "\
-                        .format(h=h), \
-                    " | sed -e 's/^ //g'")
-            elif isinstance(sqlu.svc_ports[args.service], int):
-                cmd = ("{nm} -sT -p {p} --script banner ".format(nm=nmap, \
-                        p=sqlu.svc_ports[args.service]),
-                    "--reason {h} | grep 'banner' | cut -d: -f2- "\
-                        .format(h=h), \
-                    " | sed -e 's/^ //g'")
+                if args.v: print("Service has more than one port: {}"\
+                    .format(sqlu.svc_ports[args.service]))
+                for p in sqlu.svc_ports[args.service]:
+                    hosts.extend(sqlu.get_hosts_by_port(p))
             else:
-                raise TypeError("Unrecognized type for sqlu.svc_ports[{}]: {}"\
-                    .format(args.service, type(sqlu.svc_ports[args.service])))
-            print("{}".format("".join(cmd)))
-            #exit(1)
-            output = os.popen("".join(cmd)).read().strip()
-            #print("|{}|".format(output))
-        # check if the banner is stored
-            params = {}
-            params['banner'] = output
-            params['host_id'] = sqlu.get_host_id(h)
-            #print("args.service: {}".format(args.service))
-            #print("sqlu.svc_ports[{s}]: {p}".format(s=args.service, p=sqlu.svc_ports[args.service]))
-            params['port_id'] = sqlu.get_port_id(sqlu.svc_ports[args.service])
-            if sqlu.banner_exists(params):
-        #   if it is stored,
-        #   check if the one we just grabbed is the same as the stored one
-                print("Banner exists: {b}".format(b=output))
-            else:
-                params['first_found'] = today.strftime('%s')
-                params['last_found'] = today.strftime('%s')
-                sqlu.add_banner(params)
-        else:
-            print("Host offline ({h})".format(h=h))
+                hosts = sqlu.get_hosts_by_port(sqlu.svc_ports[args.service])
+        # set the nmap path
+        nmap = utils.utils.which('nmap') \
+            if utils.utils.which('nmap') else conf['nmap_path']
+        if nmap is None and conf['nmap_path'] is None:
+            print("You must install nmap or update the config with the path.")
+            exit(1)
+        # loop through the list of targets and grab the banners for the protocol
+        print("{}".format(hosts))
+        print("nmap={}".format(nmap))
+        for h in hosts:
+            if utils.utils.is_alive(h):
+                banner = get_banner(nmap, h, sqlu.svc_ports[args.service])
+                #print("|{}|".format(banner))
+            # check if the banner is stored
+                params = {}
+                params['banner'] = banner
+                params['host_id'] = sqlu.get_host_id(h)
+                #print("args.service: {}".format(args.service))
+                #print("sqlu.svc_ports[{s}]: {p}".format(
+                    #s=args.service, p=sqlu.svc_ports[args.service]))
+                params['port_id'] = sqlu.get_port_id(sqlu.svc_ports[args.service])
 
+                if sqlu.banner_exists(params):
+            #   if it is stored,
+            #   check if the one we just grabbed is the same as the stored one
+                    print("Banner exists: {b}".format(b=banner))
+                else:
+                    params['first_found'] = today.strftime('%s')
+                    params['last_found'] = today.strftime('%s')
+                    sqlu.add_banner(params)
+
+                if 'http' in args.service:
+                    # get server header and title
+                    params['sqlu'] = sqlu
+                    header = get_server_header(nmap, params)
+                    print("Header: {}".format(header))
+                    title = get_http_title(nmap, params)
+                    print("Title: {}".format(title))
+                else:
+                    cprint("Service not HTTP(S): {}".format(args.service), "yellow")
+                if h == '192.168.1.14':
+                    exit(0)
+            else:
+                print("Host offline ({h})".format(h=h))
+    except KeyboardInterrupt:
+        utils.utils.cleanup(pidfile)
+        exit(0)
 
 if __name__=='__main__':
     main()
