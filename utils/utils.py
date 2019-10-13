@@ -16,10 +16,11 @@ class utils():
 
     @staticmethod
     def is_alive(host, port=None):
+        from termcolor import cprint
         from scapy.all import sr, IP, ICMP, TCP
         ans, unans = sr(IP(dst=host)/ICMP(), retry=0, timeout=1, verbose=False)
-        print("ans: {a}, unans: {u}".format(a=ans, u=unans))
-        if ans is not None:
+        print("scapy answer: {}".format(ans[ICMP][0]))
+        if 'echo-reply' in str(ans[ICMP][0]):
             return True
         else:
             return False
