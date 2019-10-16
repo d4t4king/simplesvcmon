@@ -431,13 +431,14 @@ class sqlutils():
     def get_port_id(self, port):
         res = None
         sql = None
-        if isinstance(port, int):
-            sql = "SELECT id FROM ports WHERE port_num={}".format(p)
+        if isinstance(port, int) or isinstance(port, str):
+            sql = "SELECT id FROM ports WHERE port_num={}".format(port)
         elif isinstance(port, list):
             sql = "SELECT id FROM ports WHERE port_num IN ('{}')".format(
                     "','".join([str(p) for p in port]))
         else:
-            raise TypeError("Unrecognized type for port.  (int|list)")
+            raise TypeError("Unrecognized type for port.  Expected: int|str|list, got {}"\
+                .format(type(port)))
         if 'sqlite3' in self.dbtype:
             import sqlite3
             conn = sqlite3.connect(self.dbfile)

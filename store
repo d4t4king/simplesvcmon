@@ -7,7 +7,6 @@ import sys
 import os
 import datetime
 import xml.etree.ElementTree as et
-import xmltodict
 import untangle
 import atexit
 import re
