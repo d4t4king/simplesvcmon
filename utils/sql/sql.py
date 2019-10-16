@@ -382,9 +382,18 @@ class sqlutils():
         return self.__execute_sql_bool(sql)
 
 
+    def http_meta_exists(self, params):
+        # needs host_id, port_id and either
+        # html_title or server_header
+        sql = "SELECT id FROM http_meta WHERE "
+        tmp = []
+        for k,v in params.items():
+            tmp.append("{k}='{v}'".format(k=k, v=v))
+        sql += " AND ".join(tmp)
+        return self.__execute_sql_bool(sql)
+
+
     def _record_exists_2f(self, table, field, value, field2, value2):
-        sys.dont_write_bytecode = True
-        #print("|{}-{}|".format(value, value2))
         if 'sqlite3' in self.dbtype:
             import sqlite3
             conn = sqlite3.connect(self.dbfile)

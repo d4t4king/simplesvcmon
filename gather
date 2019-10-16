@@ -149,6 +149,17 @@ def main():
                     params['sqlu'] = sqlu
                     header = get_server_header(nmap, params)
                     print("Header: {}".format(header))
+                    del(params['sqlu'])
+                    del(params['banner'])
+                    params['server_header'] = header
+                    pp.pprint(params)
+                    to_add = params
+                    if sqlu.http_meta_exists(params):
+                        cprint("Server header record exists.: {}"\
+                            .format(header), "yellow", attrs=['bold'])
+                    else:
+                        to_add['header_first_found'] = today.strftime('%s')
+                        to_add['header_last_found'] = today.strftime('%s')
                     title = get_http_title(nmap, params)
                     print("Title: {}".format(title))
                 else:
