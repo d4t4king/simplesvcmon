@@ -40,25 +40,25 @@ def get_banner(nmap, host, ports):
     return output
 
 
-def get_server_header(nmap, params):
+def get_server_header(nmap, params, sqlu):
     assert isinstance(params, dict), \
         "params must be a dict() containing host and port IDs"
     cmd = ("{nm} -sT -p {p} --script http-server-header ".format(nm=nmap, \
-                p=params['sqlu'].get_port(params['port_id'])),
+                p=sqlu.get_port(params['port_id'])),
             "{h} | grep 'http-server-header' | cut -d: -f2- "\
-                .format(h=params['sqlu'].get_host(params['host_id'], True)), \
+                .format(h=sqlu.get_host(params['host_id'], True)), \
             " | sed -e 's/^ //g'")
     cprint("{}".format("".join(cmd)), "magenta")
     output = os.popen("".join(cmd)).read().strip()
     return output
 
-def get_http_title(nmap, params):
+def get_http_title(nmap, params, sqlu):
     assert isinstance(params, dict), \
         "params must be a dict() containing host and port IDs"
     cmd = ("{nm} -sT -p {p} --script http-title ".format(nm=nmap, \
-                p=params['sqlu'].get_port(params['port_id'])),
+                p=sqlu.get_port(params['port_id'])),
             "{h} | grep 'http-title' | cut -d: -f2- "\
-                .format(h=params['sqlu'].get_host(params['host_id'], True)), \
+                .format(h=sqlu.get_host(params['host_id'], True)), \
             " | sed -e 's/^ //g'")
     cprint("{}".format("".join(cmd)), "yellow")
     output = os.popen("".join(cmd)).read().strip()
@@ -144,14 +144,18 @@ def main():
                     params['last_found'] = today.strftime('%s')
                     sqlu.add_banner(params)
 
+                params = {}
+                params['host_id'] = sqlu.get_host_id(h)
+                params['port_id'] = sqlu.get_port_id(sqlu.svc_ports[args.service])
                 if 'http' in args.service:
                     # get server header and title
                     params['sqlu'] = sqlu
-                    header = get_server_header(nmap, params)
-                    print("Header: {}".format(header))
+                    header = get_server_header(nmap, params, sqlu)
                     del(params['sqlu'])
-                    del(params['banner'])
+                    print("Header: {}".format(header))
                     params['server_header'] = header
+                    #params['header_first_found'] = today.strftime('%s')
+                    #params['header_last_updated'] = today.strftime('%s')
                     pp.pprint(params)
                     to_add = params
                     if sqlu.http_meta_exists(params):
@@ -159,8 +163,8 @@ def main():
                             .format(header), "yellow", attrs=['bold'])
                     else:
                         to_add['header_first_found'] = today.strftime('%s')
-                        to_add['header_last_found'] = today.strftime('%s')
-                    title = get_http_title(nmap, params)
+                        to_add['header_last_updated'] = today.strftime('%s')
+                    title = get_http_title(nmap, params, sqlu)
                     print("Title: {}".format(title))
                 else:
                     cprint("Service not HTTP(S): {}".format(args.service), "yellow")

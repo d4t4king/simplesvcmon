@@ -10,7 +10,8 @@ from utils.sql import sql
 
 def main():
     parser = argparse.ArgumentParser('get stats from db')
-    parser.add_argument('action', help="Which stats you want?")
+    parser.add_argument('action', 
+        help="Which stats you want? Valid options: records, ports, config, time")
     args = parser.parse_args()
 
     # all these stats are in the db (somewhere), so set up the semi-"global"
