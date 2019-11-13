@@ -13,5 +13,5 @@ python version of the perl/ruby service_monitor
 * subversion
 
 NOTE:  The packages above may be required on, for example, a minimal CentOS7 install.  I think modern Ubuntu derivatives (Desktop, Linux Mint, etc.) may have some of these packages installed already.
-NOTE:  This should Just Work &#0153 on Kali Linux
+NOTE:  This should Just Work &#0153; on Kali Linux
 
