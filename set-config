@@ -4,6 +4,7 @@ import os
 import sys
 import argparse
 from termcolor import cprint, colored
+from pprint import pprint
 
 from utils.sql import sql
 
@@ -52,6 +53,12 @@ def main():
             .format(args.dbtype))
 
     config = db.load_config()
+
+    # If called as "get-config" (via symlink on linux), 
+    # dump the existing config to stdout and exit.
+    if 'get-config' in sys.argv[0]:
+        pprint(config)
+        exit(0)
 
     if args.masscan_path is not None:
         config['masscan_path'] = args.masscan_path
