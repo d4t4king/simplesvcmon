@@ -12,6 +12,19 @@ python version of the perl/ruby service_monitor
 * git
 * subversion
 
+## The following python modules may also be required:
+* termcolor
+* untangle
+* scapy
+* sqlite3
+
+
 NOTE:  The packages above may be required on, for example, a minimal CentOS7 install.  I think modern Ubuntu derivatives (Desktop, Linux Mint, etc.) may have some of these packages installed already.
 NOTE:  This should Just Work &trade; on Kali Linux
+
+# TODO
+* create framework (cli/menu-driven/hybrid) mode -- aka metasploit type interface
+* create daemon mode -- configure and forget
+* bugfixes
+* reports
 
