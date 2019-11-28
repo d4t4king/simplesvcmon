@@ -1,4 +1,5 @@
 import os
+from pprint import pprint
 
 class utils():
     def __init__(self):
@@ -17,10 +18,9 @@ class utils():
     @staticmethod
     def is_alive(host, port=None):
         from termcolor import cprint
-        from scapy.all import sr, IP, ICMP, TCP
-        ans, unans = sr(IP(dst=host)/ICMP(), retry=0, timeout=1, verbose=False)
-        print("scapy answer: {}".format(ans[ICMP][0]))
-        if 'echo-reply' in str(ans[ICMP][0]):
+        from scapy.all import sr1, IP, ICMP, TCP
+        ans = sr1(IP(dst=host)/ICMP(), retry=0, timeout=1, verbose=False)
+        if ans is not None:
             return True
         else:
             return False

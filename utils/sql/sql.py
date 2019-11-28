@@ -632,6 +632,8 @@ class sqlutils():
 
 
     def get_host(self, host_id, ip_only=False):
-        sql = "SELECT DISTINCT hostname, ipv4addr FROM hosts WHERE id={}"\
-                .format(host_id)
+        if ip_only:
+            sql = "SELECT DISTINCT ipv4addr FROM hosts WHERE id={}".format(host_id)
+        else:
+            sql = "SELECT DISTINCT hostname, ipv4addr FROM hosts WHERE id={}".format(host_id)
         return self.__execute_sql_str(sql)
